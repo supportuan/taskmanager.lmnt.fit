@@ -74,14 +74,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (max-width: 1023px) {
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+  }
+}
+
 @layer components {
   .dashboard-main-grid {
     display: grid;
     gap: 1.25rem;
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      'calendar'
       'productivity'
+      'calendar'
       'schedule'
       'preview';
   }
@@ -152,6 +160,18 @@ body {
   @media (min-width: 640px) {
     .dashboard-greeting-title {
       font-size: clamp(0.9375rem, 1.75vw, 1.4375rem);
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .dashboard-greeting-title {
+      font-size: calc(0.875rem + 3px);
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .dashboard-greeting-title {
+      font-size: calc(0.9375rem + 3px);
     }
   }
 

@@ -16,11 +16,13 @@ export function Header({ searchQuery, onSearchChange }: HeaderProps) {
   }
 
   return (
-    <header className="relative z-30 pb-4">
+    <header className="relative z-30 pb-4 max-lg:mt-3 max-lg:pt-1 lg:mt-0 lg:pt-0">
       <div
         className={[
-          'relative w-full max-w-[min(640px,100%)] transition-all duration-300 ease-out',
-          searchFocused ? 'max-w-[min(640px,calc(100%-280px))]' : 'max-w-[420px]',
+          'relative w-full max-w-[min(640px,100%)] transition-all duration-300 ease-out max-lg:max-w-full',
+          searchFocused
+            ? 'lg:max-w-[min(640px,calc(100%-280px))]'
+            : 'max-lg:max-w-full lg:max-w-[420px]',
         ].join(' ')}
       >
         <Search

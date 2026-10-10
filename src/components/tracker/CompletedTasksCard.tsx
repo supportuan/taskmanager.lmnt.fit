@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type Ref } from 'react'
 import { formatDuration } from '../../utils/dateUtils'
 import type { TrackerTask } from '../../types/tracker'
 import { priorityAccent } from '../../types/tracker'
@@ -8,14 +8,19 @@ interface CompletedTasksCardProps {
   tasks: TrackerTask[]
   onDropTaskId: (taskId: number) => void
   isCompleting?: boolean
+  dropZoneRef?: Ref<HTMLDivElement>
+  touchDragOver?: boolean
 }
 
 export function CompletedTasksCard({
   tasks,
   onDropTaskId,
   isCompleting = false,
+  dropZoneRef,
+  touchDragOver = false,
 }: CompletedTasksCardProps) {
   const [dragOver, setDragOver] = useState(false)
+  const highlightDrop = dragOver || touchDragOver
 
   const onDragOver = (event: React.DragEvent) => {
     event.preventDefault()
@@ -35,10 +40,11 @@ export function CompletedTasksCard({
 
   return (
     <GlassCard
+      ref={dropZoneRef}
       tier="main"
       className={[
         'flex h-full min-h-[280px] flex-col p-6 transition-all duration-[220ms]',
-        dragOver ? 'ring-2 ring-[rgba(52,175,255,0.55)] ring-offset-0' : '',
+        highlightDrop ? 'ring-2 ring-[rgba(52,175,255,0.55)] ring-offset-0' : '',
       ].join(' ')}
       style={{ animationDelay: '0.14s' }}
       onDragOver={onDragOver}
@@ -57,7 +63,7 @@ export function CompletedTasksCard({
           <li
             className={[
               'flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed px-4 py-8 text-center text-sm transition-colors',
-              dragOver
+              highlightDrop
                 ? 'border-[rgba(52,175,255,0.55)] bg-[rgba(32,140,255,0.08)] text-text-main'
                 : 'border-white/12 text-text-muted',
             ].join(' ')}

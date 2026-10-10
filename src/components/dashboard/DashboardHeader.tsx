@@ -15,7 +15,7 @@ export function DashboardHeader({ searchQuery, onSearchChange }: DashboardHeader
   const [searchFocused, setSearchFocused] = useState(false)
 
   return (
-    <div className="dashboard-greeting-cluster min-w-0 pt-0">
+    <div className="dashboard-greeting-cluster min-w-0 pt-0 max-lg:pt-4 lg:pt-0">
       <div className="animate-fade-up" style={{ animationDelay: '0.05s' }}>
         <div className="flex min-w-0 items-center gap-2 md:flex-nowrap">
           <h1 className="dashboard-greeting-title min-w-0 font-semibold leading-tight tracking-tight text-white lg:whitespace-nowrap">

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useMediaMaxLg } from '../hooks/useMediaMaxLg'
 import { useOutletContext } from 'react-router-dom'
 import { StatusBanner } from '../components/common/StatusBanner'
 import { CompletionReflectionModal } from '../components/tracker/CompletionReflectionModal'
@@ -19,6 +20,11 @@ interface ShellContext {
 
 export function TaskTracker() {
   const { searchQuery } = useOutletContext<ShellContext>()
+  const isMobileTablet = useMediaMaxLg()
+  const completedDropRef = useRef<HTMLDivElement>(null)
+  const [touchDragTaskId, setTouchDragTaskId] = useState<number | null>(null)
+  const [touchDragPoint, setTouchDragPoint] = useState<{ x: number; y: number } | null>(null)
+  const [touchOverDropZone, setTouchOverDropZone] = useState(false)
   const [now, setNow] = useState(() => new Date())
   const [banner, setBanner] = useState<{ message: string; tone: 'success' | 'error' } | null>(
     null,
@@ -84,12 +90,61 @@ export function TaskTracker() {
     setSelectedIso(iso)
   }
 
-  const onDropComplete = (taskId: number) => {
+  const onDropComplete = useCallback((taskId: number) => {
     const result = completeTaskFromDrag(taskId)
     if (!result.ok) {
       setBanner({ message: result.message, tone: 'error' })
     }
-  }
+  }, [completeTaskFromDrag])
+
+  const endTouchDrag = useCallback(() => {
+    setTouchDragTaskId(null)
+    setTouchDragPoint(null)
+    setTouchOverDropZone(false)
+  }, [])
+
+  const onTouchLongPress = useCallback((taskId: number, point: { x: number; y: number }) => {
+    setTouchDragTaskId(taskId)
+    setTouchDragPoint(point)
+    setTouchOverDropZone(false)
+  }, [])
+
+  useEffect(() => {
+    if (touchDragTaskId == null) return
+
+    const onMove = (event: TouchEvent) => {
+      const touch = event.touches[0]
+      if (!touch) return
+      event.preventDefault()
+      setTouchDragPoint({ x: touch.clientX, y: touch.clientY })
+      const target = document.elementFromPoint(touch.clientX, touch.clientY)
+      setTouchOverDropZone(Boolean(target && completedDropRef.current?.contains(target)))
+    }
+
+    const onEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0]
+      if (touch) {
+        const target = document.elementFromPoint(touch.clientX, touch.clientY)
+        if (target && completedDropRef.current?.contains(target)) {
+          onDropComplete(touchDragTaskId)
+        }
+      }
+      endTouchDrag()
+    }
+
+    document.addEventListener('touchmove', onMove, { passive: false })
+    document.addEventListener('touchend', onEnd)
+    document.addEventListener('touchcancel', onEnd)
+    return () => {
+      document.removeEventListener('touchmove', onMove)
+      document.removeEventListener('touchend', onEnd)
+      document.removeEventListener('touchcancel', onEnd)
+    }
+  }, [touchDragTaskId, endTouchDrag, onDropComplete])
+
+  const touchDragTask = touchDragTaskId
+    ? nextSix.find((task) => task.id === touchDragTaskId)
+    : undefined
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-5 pb-4 xl:gap-6">
@@ -122,12 +177,17 @@ export function TaskTracker() {
             currentTaskId={currentTaskId}
             onSelect={selectTask}
             draggable
+            touchDragEnabled={isMobileTablet}
+            onTouchLongPress={onTouchLongPress}
+            touchDraggingTaskId={touchDragTaskId}
           />
         </section>
 
         <section className="task-tracker-area-completed min-w-0" aria-label="Completed tasks">
           <CompletedTasksCard
             tasks={completedForDay}
+            dropZoneRef={completedDropRef}
+            touchDragOver={touchOverDropZone}
             onDropTaskId={(id) => {
               void onDropComplete(id)
             }}
@@ -181,6 +241,21 @@ export function TaskTracker() {
       ) : null}
 
       {banner ? <StatusBanner message={banner.message} tone={banner.tone} /> : null}
+
+      {touchDragTaskId && touchDragPoint && touchDragTask ? (
+        <div
+          className="pointer-events-none fixed z-[400] max-w-[min(280px,calc(100vw-2rem))] rounded-xl border border-[rgba(52,175,255,0.55)] bg-[rgba(8,18,42,0.96)] px-3 py-2.5 shadow-glowBlue lg:hidden"
+          style={{
+            left: touchDragPoint.x,
+            top: touchDragPoint.y,
+            transform: 'translate(-50%, -50%)',
+          }}
+          aria-hidden
+        >
+          <p className="truncate text-sm font-medium text-white">{touchDragTask.title}</p>
+          <p className="text-[11px] text-text-muted">Release over Task Completed</p>
+        </div>
+      ) : null}
     </div>
   )
 }

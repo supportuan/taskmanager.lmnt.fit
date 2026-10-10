@@ -1,6 +1,7 @@
 import { formatDuration } from '../../utils/dateUtils'
 import type { TrackerTask } from '../../types/tracker'
 import { priorityAccent } from '../../types/tracker'
+import { useLongPressTaskDragHandlers } from '../../hooks/useLongPressTaskDragHandlers'
 import { GlassCard } from '../layout/GlassCard'
 
 interface NextTasksCardProps {
@@ -8,6 +9,9 @@ interface NextTasksCardProps {
   currentTaskId: number | undefined
   onSelect: (id: number) => void
   draggable?: boolean
+  touchDragEnabled?: boolean
+  onTouchLongPress?: (taskId: number, point: { x: number; y: number }) => void
+  touchDraggingTaskId?: number | null
 }
 
 export function NextTasksCard({
@@ -15,7 +19,14 @@ export function NextTasksCard({
   currentTaskId,
   onSelect,
   draggable = false,
+  touchDragEnabled = false,
+  onTouchLongPress,
+  touchDraggingTaskId = null,
 }: NextTasksCardProps) {
+  const bindTouchDrag = useLongPressTaskDragHandlers({
+    enabled: touchDragEnabled && Boolean(onTouchLongPress),
+    onLongPress: (taskId, point) => onTouchLongPress?.(taskId, point),
+  })
   return (
     <GlassCard tier="main" className="flex h-full flex-col p-6" style={{ animationDelay: '0.12s' }}>
       <div className="mb-6">
@@ -30,23 +41,35 @@ export function NextTasksCard({
           tasks.map((task, index) => {
             const isCurrent = task.id === currentTaskId
             const isCompleted = task.workflowStatus === 'completed'
+            const useNativeDrag = draggable && !isCompleted && !touchDragEnabled
+            const touchHandlers =
+              touchDragEnabled && !isCompleted ? bindTouchDrag(task.id) : {}
+            const isTouchDragging = touchDraggingTaskId === task.id
+
             return (
               <li key={task.id}>
                 <button
                   type="button"
-                  draggable={draggable && !isCompleted}
+                  draggable={useNativeDrag}
                   onDragStart={(event) => {
-                    if (!draggable || isCompleted) return
+                    if (!useNativeDrag) return
                     event.dataTransfer.setData('application/x-taskflow-task-id', String(task.id))
                     event.dataTransfer.effectAllowed = 'move'
                   }}
-                  onClick={() => onSelect(task.id)}
+                  {...touchHandlers}
+                  onClick={(event) => {
+                    if ('onClick' in touchHandlers && typeof touchHandlers.onClick === 'function') {
+                      touchHandlers.onClick(event)
+                    }
+                    if (!event.defaultPrevented) onSelect(task.id)
+                  }}
                   className={[
                     'tracker-next-item group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-[220ms]',
                     isCurrent
                       ? 'schedule-row-current border-[rgba(52,175,255,0.55)]'
                       : 'schedule-row border-transparent',
                     isCompleted && 'opacity-60',
+                    isTouchDragging && 'scale-[0.98] opacity-40',
                   ].join(' ')}
                 >
                   <span

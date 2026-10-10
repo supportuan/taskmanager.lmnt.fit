@@ -28,7 +28,7 @@ export function HeaderToolbar({
 
   const dateTimeClassName =
     layout === 'dashboard'
-      ? 'shrink-0'
+      ? 'hidden shrink-0 min-[445px]:block'
       : showDateTimeOnMobile
         ? 'shrink-0'
         : 'hidden shrink-0 sm:block'

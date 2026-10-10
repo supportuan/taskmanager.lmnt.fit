@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from 'react'
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react'
 
 interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
@@ -21,18 +21,22 @@ const glowStyles = {
   purple: 'shadow-[0_0_24px_rgba(123,77,255,0.18)]',
 }
 
-export function GlassCard({
-  children,
-  className = '',
-  glow = 'none',
-  tier = 'main',
-  animate = true,
-  ...props
-}: GlassCardProps) {
+export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(function GlassCard(
+  {
+    children,
+    className = '',
+    glow = 'none',
+    tier = 'main',
+    animate = true,
+    ...props
+  },
+  ref,
+) {
   const panelClass = tierStyles[tier]
 
   return (
     <div
+      ref={ref}
       className={[
         panelClass,
         'rounded-glass',
@@ -47,4 +51,4 @@ export function GlassCard({
       {children}
     </div>
   )
-}
+})

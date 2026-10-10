@@ -19,6 +19,7 @@ interface CalendarCardProps {
   onPrevMonth: () => void
   onNextMonth: () => void
   onSelectDate: (iso: string, date: Date) => void
+  onDoubleClickDate?: (iso: string, date: Date) => void
   isToday: (date: Date) => boolean
 }
 
@@ -30,12 +31,13 @@ export function CalendarCard({
   onPrevMonth,
   onNextMonth,
   onSelectDate,
+  onDoubleClickDate,
   isToday,
 }: CalendarCardProps) {
   return (
     <GlassCard
       tier="accent"
-      className="dashboard-calendar-card p-5 lg:p-6"
+      className="dashboard-calendar-card p-4 sm:p-5 lg:p-6"
       glow="blue"
       style={{ animationDelay: '0.08s' }}
     >
@@ -83,8 +85,9 @@ export function CalendarCard({
               key={iso}
               type="button"
               onClick={() => onSelectDate(iso, date)}
+              onDoubleClick={() => onDoubleClickDate?.(iso, date)}
               className={[
-                'calendar-day relative flex min-h-[2.5rem] w-full flex-col items-center justify-center gap-0.5 rounded-full px-0.5 py-1 text-xs font-medium',
+                'calendar-day relative flex min-h-[2.75rem] w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-0.5 py-1 text-xs font-medium sm:min-h-[2.5rem]',
                 !inCurrentMonth && 'text-text-muted/40',
                 inCurrentMonth && !selected && 'text-text-secondary',
                 today && !selected && 'ring-1 ring-[rgba(37,200,255,0.4)]',

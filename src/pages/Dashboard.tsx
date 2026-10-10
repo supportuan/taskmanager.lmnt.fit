@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { CalendarCard } from '../components/dashboard/CalendarCard'
 import { ProductivitySnapshot } from '../components/dashboard/ProductivitySnapshot'
 import { ScheduleTimeline } from '../components/dashboard/ScheduleTimeline'
 import { TaskPreview } from '../components/dashboard/TaskPreview'
+import { DailyMomentumBlock } from '../components/layout/DailyMomentumBlock'
 import { useCalendar } from '../hooks/useCalendar'
 import { useTasks } from '../hooks/useTasks'
 import { formatISODate } from '../utils/dateUtils'
@@ -14,6 +15,7 @@ interface ShellContext {
 }
 
 export function Dashboard() {
+  const navigate = useNavigate()
   const { searchQuery } = useOutletContext<ShellContext>()
   const { grid, viewMonth, selectedIso, goToPreviousMonth, goToNextMonth, selectDate, isToday } =
     useCalendar()
@@ -56,7 +58,7 @@ export function Dashboard() {
         </p>
       )}
 
-      <div className="dashboard-main-grid mt-[50px] min-w-0">
+      <div className="dashboard-main-grid mt-4 min-w-0 lg:mt-[50px]">
         <div className="min-w-0" style={{ gridArea: 'calendar' }}>
           <CalendarCard
             viewMonth={viewMonth}
@@ -66,6 +68,9 @@ export function Dashboard() {
             onPrevMonth={goToPreviousMonth}
             onNextMonth={goToNextMonth}
             onSelectDate={selectDate}
+            onDoubleClickDate={(iso) => {
+              navigate(`/add-task?date=${encodeURIComponent(iso)}`)
+            }}
             isToday={isToday}
           />
         </div>
@@ -93,6 +98,10 @@ export function Dashboard() {
             onStartTask={startTask}
           />
         </div>
+      </div>
+
+      <div className="min-w-0 lg:hidden">
+        <DailyMomentumBlock className="mt-1" />
       </div>
     </div>
   )
